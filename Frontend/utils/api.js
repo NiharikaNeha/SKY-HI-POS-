@@ -71,6 +71,9 @@ export const ordersAPI = {
   updateStatus: (orderId, status) => apiCall(`/orders/${orderId}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status })
+  }),
+  delete: (orderId) => apiCall(`/orders/${orderId}`, {
+    method: 'DELETE'
   })
 }
 

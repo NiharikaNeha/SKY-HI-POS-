@@ -2,10 +2,10 @@ import React from 'react'
 
 const SearchBar = ({ searchTerm, onSearchChange }) => {
   return (
-    <div className="relative mb-6">
+    <div className="relative mb-6 scroll-smooth">
       <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
         <svg
-          className="h-6 w-6 text-indigo-500"
+          className="h-6 w-6 text-gray-500"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -22,8 +22,8 @@ const SearchBar = ({ searchTerm, onSearchChange }) => {
         type="text"
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="🔍 Search for food items..."
-        className="w-full pl-12 sm:pl-14 pr-3 sm:pr-4 py-3 sm:py-4 border-2 border-gray-200 rounded-xl sm:rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-base sm:text-lg bg-white shadow-md hover:shadow-lg transition-all duration-200"
+        placeholder="Search for food items..."
+        className="w-full pl-12 sm:pl-14 pr-3 sm:pr-4 py-3 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none text-base sm:text-lg bg-white shadow-sm transition-all duration-200"
       />
     </div>
   )

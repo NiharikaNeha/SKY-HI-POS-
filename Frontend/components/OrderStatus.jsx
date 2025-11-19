@@ -56,8 +56,8 @@ const OrderStatus = ({ order }) => {
           {getStatusText(order.status)}
         </span>
         {order.paymentStatus === 'paid' && (
-          <span className="px-3 py-1.5 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-xl text-xs font-bold shadow-md">
-            💰 Paid
+          <span className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium">
+            Paid
           </span>
         )}
       </div>

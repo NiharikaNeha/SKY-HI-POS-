@@ -62,6 +62,17 @@ const OrderViewer = () => {
     return subtotal + tax
   }
 
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      await ordersAPI.updateStatus(orderId, newStatus)
+      // Refresh orders after status update
+      await fetchAllOrders()
+    } catch (error) {
+      console.error('Error updating order status:', error)
+      alert(`Error: ${error.message || 'Failed to update order status'}`)
+    }
+  }
+
   if (loading) {
     return (
       <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100">
@@ -76,14 +87,14 @@ const OrderViewer = () => {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100">
+    <div className="bg-white rounded-xl shadow-xl p-6 border border-gray-100 scroll-smooth">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800">Order History</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">Order History</h2>
         <div className="flex flex-wrap gap-3 w-full sm:w-auto">
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none bg-white"
           >
             <option value="all">All Status</option>
             <option value="pending">Pending</option>
@@ -95,7 +106,7 @@ const OrderViewer = () => {
           <select
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none bg-white"
+            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none bg-white"
           >
             <option value="all">All Dates</option>
             <option value={new Date().toISOString().split('T')[0]}>Today</option>
@@ -103,7 +114,7 @@ const OrderViewer = () => {
           </select>
           <button
             onClick={fetchAllOrders}
-            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold text-sm transform hover:scale-105"
+            className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-all duration-200 font-medium text-sm"
           >
             🔄 Refresh
           </button>
@@ -111,31 +122,43 @@ const OrderViewer = () => {
       </div>
 
       {filteredOrders.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-4 scroll-smooth">
           {filteredOrders.map((order) => (
             <div
               key={order._id || order.id}
-              className="border-2 border-gray-200 rounded-xl p-4 sm:p-6 hover:shadow-xl hover:border-indigo-300 transition-all duration-200"
+              className="border border-gray-200 rounded-lg p-4 sm:p-6 hover:shadow-md transition-all duration-300 scroll-smooth"
             >
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-3 mb-2">
                     <span className="text-lg sm:text-xl font-bold text-gray-800">
-                      Order #{order._id ? order._id.slice(-8).toUpperCase() : order.id || 'N/A'}
+                      Order
                     </span>
-                    <span className="px-3 py-1 bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-800 rounded-full text-xs sm:text-sm font-bold border-2 border-indigo-200">
-                      🪑 Table {order.tableNumber || order.table || 'N/A'}
+                    <span className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-xs sm:text-sm font-medium border border-gray-300">
+                      Table {order.tableNumber || order.table || 'N/A'}
                     </span>
-                    <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-bold ${
-                      order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                      order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                      order.status === 'preparing' ? 'bg-blue-100 text-blue-800' :
-                      order.status === 'ready' ? 'bg-purple-100 text-purple-800' :
-                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {order.status || 'pending'}
-                    </span>
+                    <div className="flex flex-col items-start gap-1">
+                      <label className="text-xs text-gray-500 font-medium">Cooking Status:</label>
+                      <select
+                        value={order.status || 'pending'}
+                        onChange={(e) => handleStatusChange(order._id || order.id, e.target.value)}
+                        className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border-2 transition-all cursor-pointer ${
+                          order.status === 'completed' ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200' :
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border-yellow-300 hover:bg-yellow-200' :
+                          order.status === 'preparing' ? 'bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200' :
+                          order.status === 'ready' ? 'bg-purple-100 text-purple-800 border-purple-300 hover:bg-purple-200' :
+                          order.status === 'cancelled' ? 'bg-red-100 text-red-800 border-red-300 hover:bg-red-200' :
+                          'bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200'
+                        }`}
+                        title="Update cooking status - Users will see this status"
+                      >
+                        <option value="pending">⏳ Pending</option>
+                        <option value="preparing">👨‍🍳 Preparing</option>
+                        <option value="ready">🍽️ Ready</option>
+                        <option value="completed">✅ Completed</option>
+                        <option value="cancelled">❌ Cancelled</option>
+                      </select>
+                    </div>
                   </div>
                   <span className="text-xs sm:text-sm text-gray-500 flex items-center gap-1">
                     <span>📅</span>
@@ -147,37 +170,50 @@ const OrderViewer = () => {
                   </span>
                 </div>
                 <div className="text-left sm:text-right">
-                  <div className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    ${getOrderTotal(order).toFixed(2)}
+                  <div className="text-xl sm:text-2xl font-bold text-gray-900">
+                    ₹{getOrderTotal(order).toFixed(2)}
                   </div>
                   <div className="text-xs sm:text-sm text-gray-500">Total</div>
                 </div>
               </div>
 
-              <div className="border-t-2 border-gray-200 pt-4">
-                <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-                  <span>🍽️</span>
-                  Items Ordered:
-                </h3>
+              <div className="border-t border-gray-200 pt-4">
+                <h3 className="font-bold text-gray-800 mb-3">Items Ordered:</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(order.items || []).map((item, index) => {
                     const menuItem = menuItems.find(mi => (mi._id || mi.id) === (item.menuItemId?._id || item.menuItemId || item.id))
                     return (
                       <div
                         key={index}
-                        className="flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-white rounded-lg border-2 border-gray-200 hover:border-indigo-300 hover:shadow-md transition-all"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:shadow-sm transition-all"
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl">{menuItem?.emoji || item.menuItemId?.emoji || '🍽️'}</span>
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                            {menuItem?.image ? (
+                              <img 
+                                src={menuItem.image} 
+                                alt={item.name || item.menuItemId?.name || 'Item'}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : menuItem?.emoji || item.menuItemId?.emoji ? (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <span className="text-lg">{menuItem?.emoji || item.menuItemId?.emoji}</span>
+                              </div>
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                                <span className="text-gray-400 text-xs">🍽️</span>
+                              </div>
+                            )}
+                          </div>
                           <div>
                             <div className="font-bold text-gray-800">{item.name || item.menuItemId?.name || 'Item'}</div>
                             <div className="text-xs sm:text-sm text-gray-500">
-                              ${item.price || 0} × {item.quantity || 0}
+                              ₹{item.price || 0} × {item.quantity || 0}
                             </div>
                           </div>
                         </div>
-                        <div className="font-bold text-indigo-600">
-                          ${((item.price || 0) * (item.quantity || 0)).toFixed(2)}
+                        <div className="font-bold text-gray-900">
+                          ₹{((item.price || 0) * (item.quantity || 0)).toFixed(2)}
                         </div>
                       </div>
                     )
@@ -185,17 +221,17 @@ const OrderViewer = () => {
                 </div>
               </div>
 
-              <div className="mt-4 pt-4 border-t-2 border-gray-200 flex flex-col sm:flex-row justify-between gap-2 text-sm bg-gray-50 rounded-lg p-3">
+              <div className="mt-4 pt-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between gap-2 text-sm bg-gray-50 rounded-lg p-3">
                 <div>
                   <span className="text-gray-600">Subtotal: </span>
                   <span className="font-bold text-gray-800">
-                    ${(order.subtotal || (getOrderTotal(order) / 1.1)).toFixed(2)}
+                    ₹{(order.subtotal || (getOrderTotal(order) / 1.1)).toFixed(2)}
                   </span>
                 </div>
                 <div>
                   <span className="text-gray-600">Tax (10%): </span>
                   <span className="font-bold text-gray-800">
-                    ${(order.tax || (getOrderTotal(order) * 0.1 / 1.1)).toFixed(2)}
+                    ₹{(order.tax || (getOrderTotal(order) * 0.1 / 1.1)).toFixed(2)}
                   </span>
                 </div>
               </div>
@@ -203,7 +239,7 @@ const OrderViewer = () => {
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-gray-50 rounded-xl">
+        <div className="text-center py-16 bg-gray-50 rounded-lg">
           <div className="text-6xl mb-4">📋</div>
           <p className="text-gray-500 text-xl font-bold mb-2">No orders found</p>
           <p className="text-gray-400 text-sm">Try selecting a different date or status</p>

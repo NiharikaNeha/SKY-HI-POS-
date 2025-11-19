@@ -29,6 +29,10 @@ const menuItemSchema = new mongoose.Schema({
     type: String,
     default: '🍽️'
   },
+  image: {
+    type: String,
+    default: ''
+  },
   status: {
     type: String,
     enum: ['available', 'unavailable', 'low_stock'],

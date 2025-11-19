@@ -1,11 +1,19 @@
 import React from 'react'
 import { useRestaurant } from '../../context/RestaurantContext'
+import { menuAPI } from '../../utils/api'
 
 const FoodStatusManager = () => {
-  const { menuItems, updateMenuItem } = useRestaurant()
+  const { menuItems, fetchMenuItems } = useRestaurant()
 
-  const handleStatusChange = (id, newStatus) => {
-    updateMenuItem(id, { status: newStatus })
+  const handleStatusChange = async (id, newStatus) => {
+    try {
+      await menuAPI.update(id, { status: newStatus })
+      // Refresh menu items from backend
+      await fetchMenuItems()
+    } catch (error) {
+      console.error('Error updating status:', error)
+      alert(`Error: ${error.message || 'Failed to update status'}`)
+    }
   }
 
   const getStatusColor = (status) => {
@@ -22,8 +30,8 @@ const FoodStatusManager = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Food Status Management</h2>
+    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 scroll-smooth">
+      <h2 className="text-2xl font-bold text-gray-800 mb-6 tracking-tight">Food Status Management</h2>
       
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -38,10 +46,26 @@ const FoodStatusManager = () => {
           </thead>
           <tbody>
             {menuItems.map((item) => (
-              <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr key={item._id || item.id} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl">{item.emoji}</span>
+                    <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                      {item.image ? (
+                        <img 
+                          src={item.image} 
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : item.emoji ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <span className="text-xl">{item.emoji}</span>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-200">
+                          <span className="text-gray-400 text-xs">No Image</span>
+                        </div>
+                      )}
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-800">{item.name}</div>
                       <div className="text-sm text-gray-500">{item.description}</div>
@@ -49,7 +73,7 @@ const FoodStatusManager = () => {
                   </div>
                 </td>
                 <td className="py-4 px-4 text-gray-700">{item.category}</td>
-                <td className="py-4 px-4 font-semibold text-gray-800">${item.price}</td>
+                <td className="py-4 px-4 font-semibold text-gray-800">₹{item.price}</td>
                 <td className="py-4 px-4">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(item.status)}`}>
                     {item.status === 'available' ? 'Available' : 
@@ -59,7 +83,7 @@ const FoodStatusManager = () => {
                 <td className="py-4 px-4">
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleStatusChange(item.id, 'available')}
+                      onClick={() => handleStatusChange(item._id || item.id, 'available')}
                       className={`px-3 py-1 rounded text-sm font-medium transition ${
                         item.status === 'available'
                           ? 'bg-green-500 text-white'
@@ -69,7 +93,7 @@ const FoodStatusManager = () => {
                       Available
                     </button>
                     <button
-                      onClick={() => handleStatusChange(item.id, 'low_stock')}
+                      onClick={() => handleStatusChange(item._id || item.id, 'low_stock')}
                       className={`px-3 py-1 rounded text-sm font-medium transition ${
                         item.status === 'low_stock'
                           ? 'bg-yellow-500 text-white'
@@ -79,7 +103,7 @@ const FoodStatusManager = () => {
                       Low Stock
                     </button>
                     <button
-                      onClick={() => handleStatusChange(item.id, 'unavailable')}
+                      onClick={() => handleStatusChange(item._id || item.id, 'unavailable')}
                       className={`px-3 py-1 rounded text-sm font-medium transition ${
                         item.status === 'unavailable'
                           ? 'bg-red-500 text-white'

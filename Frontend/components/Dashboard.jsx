@@ -97,28 +97,28 @@ const Dashboard = ({ username, onLogout }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gray-50 scroll-smooth">
       {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-xl sticky top-0 z-10 border-b border-gray-200">
+      <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200 backdrop-blur-sm bg-white/95">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 w-full sm:w-auto">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center text-white text-lg sm:text-2xl font-bold shadow-lg">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gray-800 rounded-lg flex items-center justify-center text-white text-lg sm:text-2xl font-bold">
                 🍽️
               </div>
               <div className="flex-1 sm:flex-none">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                   SKY-HI Restaurant
                 </h1>
-                <p className="text-gray-600 font-medium text-sm sm:text-base">Welcome, {username}! 👋</p>
+                <p className="text-gray-600 text-sm sm:text-base font-medium">Welcome, {username}</p>
               </div>
               {/* Google-style Profile Button - Beside Restaurant Name */}
               <button
                 onClick={() => navigate('/dashboard/profile')}
-                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-110 border-2 border-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 overflow-hidden ml-auto sm:ml-0 ${
+                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full transition-all duration-200 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 overflow-hidden ml-auto sm:ml-0 ${
                   location.pathname === '/dashboard/profile'
-                    ? 'bg-gradient-to-br from-indigo-700 to-purple-700 ring-4 ring-indigo-300'
-                    : 'bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700'
+                    ? 'bg-gray-800 ring-2 ring-gray-400'
+                    : 'bg-gray-700 hover:bg-gray-800'
                 }`}
                 title={user?.name || username}
               >
@@ -138,30 +138,30 @@ const Dashboard = ({ username, onLogout }) => {
             <div className="flex items-center flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => navigate('/dashboard')}
-                className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base transform hover:scale-105 ${
+                className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base ${
                   location.pathname === '/dashboard' || location.pathname === '/dashboard/'
-                    ? 'bg-gradient-to-r from-indigo-700 to-purple-700 text-white'
-                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
+                    ? 'bg-gray-800 text-white'
+                    : 'bg-gray-700 text-white hover:bg-gray-800'
                 }`}
               >
-                📋 Menu
+                Menu
               </button>
               <button
                 onClick={() => navigate('/dashboard/orders')}
-                className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base transform hover:scale-105 ${
+                className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base ${
                   location.pathname === '/dashboard/orders'
-                    ? 'bg-gradient-to-r from-indigo-700 to-purple-700 text-white'
-                    : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700'
+                    ? 'bg-gray-800 text-white'
+                    : 'bg-gray-700 text-white hover:bg-gray-800'
                 }`}
               >
-                📦 Orders
+                Orders
               </button>
               <button
                 onClick={() => {
                   onLogout()
                   navigate('/login', { replace: true })
                 }}
-                className="flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg sm:rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold text-sm sm:text-base transform hover:scale-105"
+                className="flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 font-medium text-sm sm:text-base"
               >
                 Logout
               </button>
@@ -171,11 +171,11 @@ const Dashboard = ({ username, onLogout }) => {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 scroll-smooth">
         {orderPlaced && (
-          <div className="mb-4 sm:mb-6 p-3 sm:p-5 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-xl sm:rounded-2xl shadow-lg">
-            <p className="text-green-800 font-bold text-sm sm:text-lg flex items-center gap-2">
-              <span className="text-xl sm:text-2xl">🎉</span>
+          <div className="mb-4 sm:mb-6 p-3 sm:p-5 bg-green-50 border border-green-200 rounded-lg shadow-sm">
+            <p className="text-green-800 font-medium text-sm sm:text-base flex items-center gap-2">
+              <span>✓</span>
               <span className="flex-1">Order placed successfully! Check "My Orders" to pay.</span>
             </p>
           </div>

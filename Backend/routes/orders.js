@@ -156,5 +156,33 @@ router.patch('/:orderId/status', authenticate, isAdmin, async (req, res) => {
   }
 })
 
+// Delete order (User can delete their own orders, Admin can delete any)
+router.delete('/:orderId', authenticate, async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.orderId)
+
+    if (!order) {
+      return res.status(404).json({ message: 'Order not found' })
+    }
+
+    // Check if user owns the order or is admin
+    if (order.userId.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' })
+    }
+
+    // Only allow deletion of pending or cancelled orders
+    if (!['pending', 'cancelled'].includes(order.status)) {
+      return res.status(400).json({ message: 'Can only delete pending or cancelled orders' })
+    }
+
+    await Order.findByIdAndDelete(req.params.orderId)
+
+    res.json({ message: 'Order deleted successfully' })
+  } catch (error) {
+    console.error('Delete order error:', error)
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+})
+
 export default router
 

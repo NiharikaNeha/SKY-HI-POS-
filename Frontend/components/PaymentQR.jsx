@@ -57,7 +57,7 @@ const PaymentQR = ({ order, onPaymentSuccess }) => {
         <div className="flex items-center justify-between mb-2 sm:mb-3">
           <span className="text-gray-700 font-semibold text-sm sm:text-base lg:text-lg">Order Total:</span>
           <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-            ${order.total.toFixed(2)}
+            ₹{order.total.toFixed(2)}
           </span>
         </div>
         <div className="flex items-center justify-between">
@@ -78,9 +78,6 @@ const PaymentQR = ({ order, onPaymentSuccess }) => {
             <img src={order.qrCode} alt="Payment QR Code" className="w-48 h-48 sm:w-64 sm:h-64 lg:w-72 lg:h-72" />
           </div>
           <div className="space-y-2">
-            <p className="text-sm text-gray-600 font-medium">
-              Order ID: <span className="font-bold text-indigo-600">{order._id.slice(-8).toUpperCase()}</span>
-            </p>
             <p className="text-sm text-gray-600 font-medium">
               Table: <span className="font-bold text-indigo-600">{order.tableNumber}</span>
             </p>

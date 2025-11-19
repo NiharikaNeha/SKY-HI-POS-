@@ -110,7 +110,7 @@ const ProfitLossTracker = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 scroll-smooth">
       {/* Date Selector */}
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-4">
@@ -128,18 +128,18 @@ const ProfitLossTracker = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
           <div className="text-sm text-gray-600 mb-1">Total Revenue</div>
-          <div className="text-3xl font-bold text-blue-600">${dailyData.totalRevenue.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-blue-600">₹{dailyData.totalRevenue.toFixed(2)}</div>
         </div>
         
         <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
           <div className="text-sm text-gray-600 mb-1">Total Cost</div>
-          <div className="text-3xl font-bold text-red-600">${dailyData.totalCost.toFixed(2)}</div>
+          <div className="text-3xl font-bold text-red-600">₹{dailyData.totalCost.toFixed(2)}</div>
         </div>
         
         <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${dailyData.totalProfit >= 0 ? 'border-green-500' : 'border-red-500'}`}>
           <div className="text-sm text-gray-600 mb-1">Net Profit/Loss</div>
           <div className={`text-3xl font-bold ${dailyData.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            ${dailyData.totalProfit.toFixed(2)}
+            ₹{dailyData.totalProfit.toFixed(2)}
           </div>
         </div>
         
@@ -182,15 +182,15 @@ const ProfitLossTracker = () => {
               <tbody>
                 {dailyData.orderDetails.map((order) => (
                   <tr key={order._id || order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-4 px-4 font-semibold text-gray-800">#{order._id ? order._id.slice(-8).toUpperCase() : order.id || 'N/A'}</td>
+                    <td className="py-4 px-4 font-semibold text-gray-800">Order</td>
                     <td className="py-4 px-4 text-gray-700">Table {order.tableNumber || order.table || 'N/A'}</td>
                     <td className="py-4 px-4 text-gray-700">
                       {(order.items || []).map(item => `${item.name || item.menuItemId?.name || 'Item'} x${item.quantity || 0}`).join(', ')}
                     </td>
-                    <td className="py-4 px-4 font-semibold text-green-600">${order.revenue.toFixed(2)}</td>
-                    <td className="py-4 px-4 font-semibold text-red-600">${order.cost.toFixed(2)}</td>
+                    <td className="py-4 px-4 font-semibold text-green-600">₹{order.revenue.toFixed(2)}</td>
+                    <td className="py-4 px-4 font-semibold text-red-600">₹{order.cost.toFixed(2)}</td>
                     <td className={`py-4 px-4 font-semibold ${order.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ${order.profit.toFixed(2)}
+                      ₹{order.profit.toFixed(2)}
                     </td>
                     <td className="py-4 px-4 text-sm text-gray-500">
                       {order.createdAt 

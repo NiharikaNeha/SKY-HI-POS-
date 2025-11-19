@@ -44,22 +44,22 @@ const Login = ({ onLogin }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center p-3 sm:p-4">
-      <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md p-4 sm:p-6 lg:p-8 border border-white/20">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-3 sm:p-4 scroll-smooth">
+      <div className="bg-white rounded-lg shadow-md w-full max-w-md p-4 sm:p-6 lg:p-8 border border-gray-200">
         <div className="text-center mb-6 sm:mb-8">
-          <div className="inline-block p-3 sm:p-4 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl mb-3 sm:mb-4 shadow-lg">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">SKY-HI</h1>
+          <div className="inline-block p-3 sm:p-4 bg-gray-800 rounded-lg mb-3 sm:mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">SKY-HI</h1>
           </div>
-          <p className="text-gray-600 font-medium text-sm sm:text-base">Restaurant POS System</p>
+          <p className="text-gray-600 font-medium text-sm sm:text-base tracking-wide uppercase">Fine Dining POS System</p>
         </div>
 
-        <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-xl">
+        <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-lg">
           <button
             type="button"
             onClick={() => setIsRegister(false)}
-            className={`flex-1 py-3 rounded-xl font-semibold transition-all duration-200 ${
+            className={`flex-1 py-3 rounded-lg font-semibold transition-all duration-200 ${
               !isRegister
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg transform scale-105'
+                ? 'bg-gray-800 text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -68,9 +68,9 @@ const Login = ({ onLogin }) => {
           <button
             type="button"
             onClick={() => setIsRegister(true)}
-            className={`flex-1 py-3 rounded-xl font-semibold transition-all duration-200 ${
+            className={`flex-1 py-3 rounded-lg font-semibold transition-all duration-200 ${
               isRegister
-                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg transform scale-105'
+                ? 'bg-gray-800 text-white shadow-sm'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -89,7 +89,7 @@ const Login = ({ onLogin }) => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-gray-50 hover:bg-white"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none transition bg-white"
                 placeholder="Enter your name"
               />
             </div>
@@ -104,7 +104,7 @@ const Login = ({ onLogin }) => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-gray-50 hover:bg-white"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none transition bg-white"
                 placeholder="Enter your email"
                 required
               />
@@ -119,7 +119,7 @@ const Login = ({ onLogin }) => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-gray-50 hover:bg-white"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none transition bg-white"
                 placeholder="Enter your password"
                 required
                 minLength={6}
@@ -136,14 +136,14 @@ const Login = ({ onLogin }) => {
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition bg-gray-50 hover:bg-white"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-gray-500 outline-none transition bg-white"
                 placeholder="Enter your phone number"
               />
             </div>
           )}
           
           {error && (
-            <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm font-medium flex items-center gap-2">
               <span>⚠️</span>
               {error}
             </div>
@@ -152,7 +152,7 @@ const Login = ({ onLogin }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            className="w-full bg-gray-800 text-white py-4 rounded-lg font-semibold text-lg hover:bg-gray-900 transition-all duration-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <span className="flex items-center justify-center gap-2">
