@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { useRestaurant } from '../context/RestaurantContext'
-import { ordersAPI } from '../utils/api'
+import { useRestaurant } from '../../context/RestaurantContext'
+import { ordersAPI } from '../../utils/api'
 import OrderStatus from './OrderStatus'
-import PaymentQR from './PaymentQR'
+import PaymentQR from '../payment/PaymentQR'
 
 const OrderHistory = () => {
   const { menuItems } = useRestaurant()

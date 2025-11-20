@@ -9,7 +9,10 @@ export const authenticate = async (req, res, next) => {
       return res.status(401).json({ message: 'No token provided' })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key')
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: 'JWT secret not configured' })
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
     const user = await User.findById(decoded.userId).select('-password')
     
     if (!user) {

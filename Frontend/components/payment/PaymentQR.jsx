@@ -1,26 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { paymentsAPI } from '../utils/api'
 
 const PaymentQR = ({ order, onPaymentSuccess }) => {
   const [paymentStatus, setPaymentStatus] = useState(order.paymentStatus || 'pending')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    // Poll payment status
-    const interval = setInterval(async () => {
-      try {
-        const status = await paymentsAPI.getStatus(order._id)
-        setPaymentStatus(status.paymentStatus)
-        if (status.paymentStatus === 'paid' && onPaymentSuccess) {
-          onPaymentSuccess()
-        }
-      } catch (error) {
-        console.error('Error checking payment status:', error)
-      }
-    }, 3000) // Check every 3 seconds
-
-    return () => clearInterval(interval)
-  }, [order._id, onPaymentSuccess])
+    // Payment status is managed by order status
+    // No need to poll since payment gateway is removed
+    if (order.paymentStatus === 'paid' && onPaymentSuccess) {
+      onPaymentSuccess()
+    }
+  }, [order.paymentStatus, onPaymentSuccess])
 
   const getStatusColor = (status) => {
     switch (status) {

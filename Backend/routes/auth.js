@@ -5,14 +5,18 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-// Admin emails
-const ADMIN_EMAILS = ["nehaniharika07@gmail.com", "admin@sky-hi.com"];
+// Get admin emails from environment variable
+const getAdminEmails = () => {
+  const adminEmailsEnv = process.env.ADMIN_EMAILS || '';
+  return adminEmailsEnv.split(',').map(email => email.trim()).filter(Boolean);
+};
 
 // Helper function to check if email is admin 
 const isAdminEmail = (email) => {
   if (!email) return false;
   const normalizedEmail = email.toLowerCase().trim();
-  return ADMIN_EMAILS.some(
+  const adminEmails = getAdminEmails();
+  return adminEmails.some(
     (adminEmail) => adminEmail.toLowerCase() === normalizedEmail
   );
 };
@@ -58,9 +62,12 @@ router.post(
       await user.save();
 
       // Generate token
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ message: 'JWT secret not configured' })
+      }
       const token = jwt.sign(
         { userId: user._id },
-        process.env.JWT_SECRET || "your_jwt_secret_key",
+        process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
 
@@ -135,9 +142,12 @@ router.post(
       console.log(`User ${email} logged in with role: ${user.role}`);
 
       // Generate token
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ message: 'JWT secret not configured' })
+      }
       const token = jwt.sign(
         { userId: user._id },
-        process.env.JWT_SECRET || "your_jwt_secret_key",
+        process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
 

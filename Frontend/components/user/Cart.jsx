@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Cart = ({ cart, onUpdateQuantity, onRemoveItem, onPlaceOrder, selectedTable }) => {
+const Cart = ({ cart, onUpdateQuantity, onRemoveItem, onPlaceOrder, selectedTable, orderType = 'dining' }) => {
   const subtotal = cart.reduce((sum, item) => {
     const price = parseFloat(item.price) || 0
     const quantity = parseInt(item.quantity) || 0
@@ -18,11 +18,20 @@ const Cart = ({ cart, onUpdateQuantity, onRemoveItem, onPlaceOrder, selectedTabl
         <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 tracking-tight">Order Summary</h2>
       </div>
       
-      {!selectedTable && (
+      {orderType === 'dining' && !selectedTable && (
         <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
           <p className="text-yellow-800 text-sm font-medium flex items-center gap-2">
             <span>⚠️</span>
             Please select a table first
+          </p>
+        </div>
+      )}
+      
+      {orderType === 'parcel' && (
+        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-800 text-sm font-medium flex items-center gap-2">
+            <span>📦</span>
+            Takeaway order - No table selection required
           </p>
         </div>
       )}
@@ -92,14 +101,20 @@ const Cart = ({ cart, onUpdateQuantity, onRemoveItem, onPlaceOrder, selectedTabl
 
           <button
             onClick={onPlaceOrder}
-            disabled={!selectedTable || cart.length === 0}
+            disabled={(orderType === 'dining' && !selectedTable) || cart.length === 0}
             className={`w-full mt-4 sm:mt-6 py-3 sm:py-4 rounded-lg font-semibold text-base sm:text-lg transition-all duration-200 ${
-              !selectedTable || cart.length === 0
+              (orderType === 'dining' && !selectedTable) || cart.length === 0
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 : 'bg-gray-800 text-white hover:bg-gray-900'
             }`}
           >
-            {!selectedTable ? 'Select Table First' : cart.length === 0 ? 'Cart Empty' : '🚀 Place Order'}
+            {orderType === 'dining' && !selectedTable 
+              ? 'Select Table First' 
+              : cart.length === 0 
+                ? 'Cart Empty' 
+                : orderType === 'parcel'
+                  ? '📦 Place Parcel Order'
+                  : '🚀 Place Order'}
           </button>
         </>
       )}

@@ -4,7 +4,7 @@ import FoodStatusManager from './FoodStatusManager'
 import FoodUpload from './FoodUpload'
 import ProfitLossTracker from './ProfitLossTracker'
 import OrderViewer from './OrderViewer'
-import UserProfile from '../UserProfile'
+import UserProfile from '../user/UserProfile'
 
 const AdminDashboard = ({ username, onLogout }) => {
   const navigate = useNavigate()

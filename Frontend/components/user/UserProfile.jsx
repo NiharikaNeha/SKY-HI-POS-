@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { ordersAPI } from '../utils/api'
+import { ordersAPI } from '../../utils/api'
 
 const UserProfile = ({ user, onUpdate }) => {
   const [userData, setUserData] = useState(user || {})

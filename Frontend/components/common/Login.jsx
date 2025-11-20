@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { authAPI } from '../utils/api'
+import { authAPI } from '../../utils/api'
 
 const Login = ({ onLogin }) => {
   const [isRegister, setIsRegister] = useState(false)

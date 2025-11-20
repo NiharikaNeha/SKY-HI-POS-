@@ -12,7 +12,11 @@ const resetPassword = async (email, newPassword) => {
   }
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb+srv://nehaniharikaswain07_db_user:FW2wwR4UeuLhfOtJ@cluster0.ntd44ai.mongodb.net/')
+    if (!process.env.MONGODB_URI) {
+      console.error('Error: MONGODB_URI is not defined in .env file')
+      process.exit(1)
+    }
+    await mongoose.connect(process.env.MONGODB_URI)
     console.log('Connected to MongoDB')
 
     const user = await User.findOne({ email: email.toLowerCase() })

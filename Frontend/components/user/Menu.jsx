@@ -42,37 +42,42 @@ const Menu = ({ menuItems, searchTerm, onAddToCart }) => {
           filteredItems.map((item) => (
             <div
               key={item._id || item.id}
-              className="bg-white border border-gray-200 rounded-lg p-3 sm:p-4 lg:p-5 hover:shadow-md hover:border-gray-300 transition-all duration-300 scroll-smooth"
+              className="bg-white border border-gray-200 rounded-xl p-3 sm:p-4 shadow-sm hover:shadow-lg hover:border-gray-300 transition-all duration-300"
             >
-              <div className="mb-3 sm:mb-4">
-                <div className="w-full h-32 sm:h-40 lg:h-48 bg-gray-100 rounded-lg overflow-hidden mb-3 sm:mb-4">
-                  {item.image ? (
-                    <img 
-                      src={item.image} 
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : item.emoji ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <span className="text-4xl sm:text-5xl lg:text-6xl">{item.emoji}</span>
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-200">
-                      <span className="text-gray-400 text-sm">No Image</span>
-                    </div>
-                  )}
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-800 mb-1 sm:mb-2">{item.name}</h3>
-                <p className="text-xs font-medium text-gray-600 mb-1 sm:mb-2 uppercase tracking-wide">{item.category}</p>
-                <p className="text-gray-600 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-2">{item.description}</p>
+              {/* Image Section */}
+              <div className="w-full h-28 sm:h-32 lg:h-36 bg-gray-50 rounded-lg overflow-hidden mb-3 flex items-center justify-center">
+                {item.image ? (
+                  <img 
+                    src={item.image} 
+                    alt={item.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : item.emoji ? (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                    <span className="text-4xl sm:text-5xl lg:text-6xl">{item.emoji}</span>
+                  </div>
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <span className="text-gray-400 text-sm">No Image</span>
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 pt-3 sm:pt-4 border-t border-gray-200">
-                      <span className="text-2xl sm:text-3xl font-bold text-gray-900">
-                        ₹{item.price}
-                      </span>
+
+              {/* Content Section */}
+              <div className="mb-3">
+                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-0.5">{item.name}</h3>
+                <p className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wider">{item.category}</p>
+                <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">{item.description}</p>
+              </div>
+
+              {/* Price and Button Section */}
+              <div className="flex items-center justify-between gap-4 pt-3 border-t border-gray-100">
+                <span className="text-lg sm:text-xl font-bold text-gray-900">
+                  ₹{item.price}
+                </span>
                 <button
                   onClick={() => onAddToCart(item)}
-                  className="w-full sm:w-auto px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg font-medium text-sm sm:text-base transition-all duration-200 bg-gray-800 text-white hover:bg-gray-900"
+                  className="px-3 py-1.5 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 bg-blue-700 text-white hover:bg-blue-800 active:bg-blue-900 shadow-sm hover:shadow-md whitespace-nowrap"
                 >
                   Add to Cart
                 </button>

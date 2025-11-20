@@ -7,7 +7,11 @@ dotenv.config()
 const makeUserAdmin = async () => {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/skyhi-restaurant')
+    if (!process.env.MONGODB_URI) {
+      console.error('Error: MONGODB_URI is not defined in .env file')
+      process.exit(1)
+    }
+    await mongoose.connect(process.env.MONGODB_URI)
     console.log('Connected to MongoDB')
 
     const email = 'sagarika@11gmail.com'
