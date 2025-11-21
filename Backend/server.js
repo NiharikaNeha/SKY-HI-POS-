@@ -19,6 +19,8 @@ const corsOptions = {
     // List of allowed origins
     const allowedOrigins = [
       'http://localhost:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173',
       'https://sky-hi-pos.vercel.app'
     ]
     
@@ -65,6 +67,22 @@ app.use('/api/orders', orderRoutes)
 app.use('/api/menu', menuRoutes)
 app.use('/api/admin', adminRoutes)
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'SKY-HI Restaurant Backend API',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/api/auth',
+      menu: '/api/menu',
+      orders: '/api/orders',
+      admin: '/api/admin',
+      health: '/api/health'
+    }
+  })
+})
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Server is running' })
@@ -73,20 +91,28 @@ app.get('/api/health', (req, res) => {
 // Connect to MongoDB
 if (!process.env.MONGODB_URI) {
   console.error('Error: MONGODB_URI is not defined in .env file')
-  process.exit(1)
+  if (process.env.VERCEL !== '1') {
+    process.exit(1)
+  }
+} else {
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => {
+      console.log('Connected to MongoDB')
+      // Only listen on PORT if not in Vercel (serverless)
+      if (process.env.VERCEL !== '1') {
+        app.listen(PORT, () => {
+          console.log(`Server is running on port ${PORT}`)
+        })
+      }
+    })
+    .catch((error) => {
+      console.error('MongoDB connection error:', error)
+      if (process.env.VERCEL !== '1') {
+        process.exit(1)
+      }
+    })
 }
 
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('Connected to MongoDB')
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`)
-    })
-  })
-  .catch((error) => {
-    console.error('MongoDB connection error:', error)
-    process.exit(1)
-  })
-
+// Export for Vercel serverless functions
 export default app
 
