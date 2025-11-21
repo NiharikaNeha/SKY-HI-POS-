@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
+import { useAuthState } from 'react-firebase-hooks/auth'
+import { signOut as firebaseSignOut } from 'firebase/auth'
+import { auth } from '../../firebase'
 import FoodStatusManager from './FoodStatusManager'
 import FoodUpload from './FoodUpload'
 import ProfitLossTracker from './ProfitLossTracker'
 import OrderViewer from './OrderViewer'
 import UserProfile from '../user/UserProfile'
 
-const AdminDashboard = ({ username, onLogout }) => {
+const AdminDashboard = () => {
+  const [firebaseUser, firebaseLoading] = useAuthState(auth)
   const navigate = useNavigate()
   const location = useLocation()
   const [user, setUser] = useState(null)
@@ -32,20 +36,30 @@ const AdminDashboard = ({ username, onLogout }) => {
   }, [location.pathname, navigate, pathParts])
 
   useEffect(() => {
-    // Get user data from localStorage
-    const savedUser = localStorage.getItem('user')
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser))
-      } catch (error) {
-        console.error('Error parsing user data:', error)
+    // Get user data from backend
+    const fetchUser = async () => {
+      if (firebaseUser && !firebaseLoading) {
+        try {
+          const token = await firebaseUser.getIdToken()
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          if (response.ok) {
+            const data = await response.json()
+            setUser(data.user)
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error)
+        }
       }
     }
-  }, [])
+    fetchUser()
+  }, [firebaseUser, firebaseLoading])
 
   const handleUserUpdate = (updatedUser) => {
     setUser(updatedUser)
-    localStorage.setItem('user', JSON.stringify(updatedUser))
   }
 
   const tabs = [
@@ -70,7 +84,7 @@ const AdminDashboard = ({ username, onLogout }) => {
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                   SKY-HI Admin Panel
                 </h1>
-                <p className="text-gray-600 text-sm sm:text-base font-medium">Welcome, {username}</p>
+                <p className="text-gray-600 text-sm sm:text-base font-medium">Welcome, {user?.name || firebaseUser?.displayName || firebaseUser?.email || 'Admin'}</p>
               </div>
               {/* Google-style Profile Button - Beside Admin Panel Name */}
               <button
@@ -80,26 +94,26 @@ const AdminDashboard = ({ username, onLogout }) => {
                     ? 'bg-gray-800 ring-2 ring-gray-400'
                     : 'bg-gray-700 hover:bg-gray-800'
                 }`}
-                title={user?.name || username}
+                title={user?.name || firebaseUser?.displayName || firebaseUser?.email || 'Admin'}
               >
                 {user?.profileImage ? (
                   <img 
                     src={user.profileImage} 
-                    alt={user?.name || username}
+                    alt={user?.name || firebaseUser?.displayName || firebaseUser?.email || 'Admin'}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <span className="text-white font-bold text-lg sm:text-xl flex items-center justify-center w-full h-full">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : username?.charAt(0).toUpperCase() || 'A'}
+                    {user?.name ? user.name.charAt(0).toUpperCase() : (firebaseUser?.displayName || firebaseUser?.email || 'A').charAt(0).toUpperCase()}
                   </span>
                 )}
               </button>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <button
-                onClick={() => {
-                  onLogout()
-                  navigate('/login', { replace: true })
+                onClick={async () => {
+                  await firebaseSignOut(auth)
+                  navigate('/', { replace: true })
                 }}
                 className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 font-medium text-sm sm:text-base"
               >
@@ -149,4 +163,5 @@ const AdminDashboard = ({ username, onLogout }) => {
 }
 
 export default AdminDashboard
+
 

@@ -21,7 +21,8 @@ const corsOptions = {
       'http://localhost:5173',
       'http://localhost:3000',
       'http://127.0.0.1:5173',
-      'https://sky-hi-pos.vercel.app'
+      'https://sky-hi-pos.vercel.app',
+      'https://sky-hi-pos-frontend.vercel.app'
     ]
     
     // Add FRONTEND_URL from env if it exists
@@ -89,29 +90,47 @@ app.get('/api/health', (req, res) => {
 })
 
 // Connect to MongoDB
-if (!process.env.MONGODB_URI) {
-  console.error('Error: MONGODB_URI is not defined in .env file')
-  if (process.env.VERCEL !== '1') {
-    process.exit(1)
+const connectDB = async () => {
+  if (!process.env.MONGODB_URI) {
+    console.error('Error: MONGODB_URI is not defined in environment variables')
+    if (process.env.VERCEL !== '1') {
+      process.exit(1)
+    }
+    return
   }
-} else {
-  mongoose.connect(process.env.MONGODB_URI)
-    .then(() => {
-      console.log('Connected to MongoDB')
-      // Only listen on PORT if not in Vercel (serverless)
-      if (process.env.VERCEL !== '1') {
-        app.listen(PORT, () => {
-          console.log(`Server is running on port ${PORT}`)
-        })
-      }
+
+  try {
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
     })
-    .catch((error) => {
-      console.error('MongoDB connection error:', error)
-      if (process.env.VERCEL !== '1') {
-        process.exit(1)
-      }
-    })
+    console.log('Connected to MongoDB')
+    
+    // Only listen on PORT if not in Vercel (serverless)
+    if (process.env.VERCEL !== '1') {
+      app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`)
+      })
+    }
+  } catch (error) {
+    console.error('MongoDB connection error:', error)
+    if (process.env.VERCEL !== '1') {
+      process.exit(1)
+    }
+  }
 }
+
+// Handle MongoDB connection errors
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err)
+})
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected')
+})
+
+// Connect to database
+connectDB()
 
 // Export for Vercel serverless functions
 export default app

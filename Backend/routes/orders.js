@@ -9,10 +9,23 @@ const router = express.Router()
 // Create order
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { tableNumber, items } = req.body
+    const { tableNumber, tables, memberCount, orderType = 'dining', items } = req.body
 
-    if (!tableNumber || !items || items.length === 0) {
-      return res.status(400).json({ message: 'Table number and items are required' })
+    // Validate items
+    if (!items || items.length === 0) {
+      return res.status(400).json({ message: 'Items are required' })
+    }
+
+    // Validate order type
+    if (!['dining', 'parcel'].includes(orderType)) {
+      return res.status(400).json({ message: 'Invalid order type. Must be "dining" or "parcel"' })
+    }
+
+    // For dining orders, require table information
+    if (orderType === 'dining') {
+      if (!tableNumber && (!tables || tables.length === 0)) {
+        return res.status(400).json({ message: 'Table number or tables array is required for dining orders' })
+      }
     }
 
     // Calculate totals
@@ -40,16 +53,31 @@ router.post('/', authenticate, async (req, res) => {
     const total = subtotal + tax
 
     // Create order
-    const order = new Order({
+    const orderData = {
       userId: req.user._id,
-      tableNumber,
       items: orderItems,
       subtotal,
       tax,
       total,
       status: 'pending',
-      paymentStatus: 'pending'
-    })
+      paymentStatus: 'pending',
+      orderType,
+      memberCount
+    }
+
+    // Add table information based on order type
+    if (orderType === 'dining') {
+      if (tables && tables.length > 0) {
+        orderData.tables = tables
+        // Use first table as tableNumber for backward compatibility
+        orderData.tableNumber = tables[0]
+      } else if (tableNumber) {
+        orderData.tableNumber = tableNumber
+        orderData.tables = [tableNumber]
+      }
+    }
+
+    const order = new Order(orderData)
 
     await order.save()
 
@@ -57,7 +85,9 @@ router.post('/', authenticate, async (req, res) => {
     const qrCodeData = JSON.stringify({
       orderId: order._id.toString(),
       total: total,
-      tableNumber: tableNumber
+      orderType: orderType,
+      tableNumber: orderData.tableNumber || null,
+      tables: orderData.tables || null
     })
 
     const qrCodeImage = await QRCode.toDataURL(qrCodeData)
@@ -93,8 +123,9 @@ router.get('/my-orders', authenticate, async (req, res) => {
   }
 })
 
-// Get all orders (Admin only) - MUST be before /:orderId route
-router.get('/', authenticate, isAdmin, async (req, res) => {
+// Get all orders (Admin only) - This route is placed after /my-orders to avoid conflicts
+// Note: Express matches routes in order, so /my-orders must come before /:orderId
+router.get('/all', authenticate, isAdmin, async (req, res) => {
   try {
     const orders = await Order.find()
       .populate('userId', 'name email')

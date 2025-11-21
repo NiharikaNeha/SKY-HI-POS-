@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { signOut as firebaseSignOut } from "firebase/auth";
+import { auth } from "../../firebase";
 import {
   FaHome,
   FaUtensils,
@@ -14,27 +17,40 @@ import { motion } from "framer-motion";
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState(null);
+  const [user, loading] = useAuthState(auth);
+  const [userData, setUserData] = useState(null);
   const [foodFilter, setFoodFilter] = useState("All"); // "All", "Veg", "Non-Veg"
   const isLoginPage = location.pathname === "/login";
   
   useEffect(() => {
-    // Get user from localStorage
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error("Error parsing user data:", error);
+    // Fetch user from backend if signed in
+    const fetchUser = async () => {
+      if (user && !loading) {
+        try {
+          const token = await user.getIdToken();
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setUserData(data.user);
+          }
+        } catch (error) {
+          console.error("Error fetching user:", error);
+        }
+      } else {
+        setUserData(null);
       }
-    }
-  }, [location.pathname]); // Re-check when route changes
+    };
+    fetchUser();
+  }, [user, loading, location.pathname]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/login", { replace: true });
+  const handleLogout = async () => {
+    await firebaseSignOut(auth);
+    setUserData(null);
+    navigate("/", { replace: true });
   };
 
   const toggleFilter = () => {
@@ -45,7 +61,7 @@ const Navbar = () => {
     });
   };
 
-  const isAdmin = user?.role === "admin";
+  const isAdmin = userData?.role === "admin" || false;
 
   const menuItems = [
     { name: "Home", icon: <FaHome />, path: "/home" },
@@ -54,7 +70,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 backdrop-blur-lg shadow-lg border-b bg-white border-gray-200">
+    <nav className="fixed top-0 left-0 w-full z-50 backdrop-blur-lg shadow-lg border-b bg-white border-gray-200 mt-19">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 flex justify-between items-center h-16">
         {/* 🍴 Logo */}
         <motion.div

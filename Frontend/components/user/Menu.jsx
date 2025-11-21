@@ -12,7 +12,7 @@ const Menu = ({ menuItems, searchTerm, onAddToCart }) => {
   const activeCategory = 'All'
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200 scroll-smooth">
+    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200 scroll-smooth mt-10">
       <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-800 rounded-lg flex items-center justify-center text-white text-lg sm:text-xl font-bold">
           🍽️

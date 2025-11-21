@@ -2,6 +2,12 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcryptjs'
 
 const userSchema = new mongoose.Schema({
+  firebaseUid: {
+    type: String,
+    unique: true,
+    sparse: true, // Allow null values but ensure uniqueness when present
+    trim: true
+  },
   name: {
     type: String,
     required: true,
@@ -16,7 +22,7 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    // Password not required when using Clerk
     minlength: 4
   },
   role: {
@@ -32,9 +38,9 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 })
 
-// Hash password before saving
+// Hash password before saving (only if password exists and is modified)
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next()
+  if (!this.isModified('password') || !this.password) return next()
   this.password = await bcrypt.hash(this.password, 10)
   next()
 })

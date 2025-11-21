@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { useAuthState } from 'react-firebase-hooks/auth'
+import { signOut as firebaseSignOut } from 'firebase/auth'
+import { auth } from '../../firebase'
 import { useRestaurant } from '../../context/RestaurantContext'
 import { ordersAPI } from '../../utils/api'
 import SearchBar from './SearchBar'
@@ -9,7 +12,8 @@ import Cart from './Cart'
 import OrderHistory from '../common/OrderHistory'
 import UserProfile from './UserProfile'
 
-const Dashboard = ({ username, onLogout }) => {
+const Dashboard = () => {
+  const [firebaseUser, firebaseLoading] = useAuthState(auth)
   const { menuItems } = useRestaurant()
   const navigate = useNavigate()
   const location = useLocation()
@@ -24,16 +28,27 @@ const Dashboard = ({ username, onLogout }) => {
   const [orderType, setOrderType] = useState('dining') // 'dining' or 'parcel'
 
   useEffect(() => {
-    // Get user data from localStorage
-    const savedUser = localStorage.getItem('user')
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser))
-      } catch (error) {
-        console.error('Error parsing user data:', error)
+    // Get user data from backend
+    const fetchUser = async () => {
+      if (firebaseUser && !firebaseLoading) {
+        try {
+          const token = await firebaseUser.getIdToken()
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/api/auth/me`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          })
+          if (response.ok) {
+            const data = await response.json()
+            setUser(data.user)
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error)
+        }
       }
     }
-  }, [])
+    fetchUser()
+  }, [firebaseUser, firebaseLoading])
 
   const handleUserUpdate = (updatedUser) => {
     setUser(updatedUser)
@@ -145,7 +160,7 @@ const Dashboard = ({ username, onLogout }) => {
                 <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
                   SKY-HI Restaurant
                 </h1>
-                <p className="text-gray-600 text-sm sm:text-base font-medium">Welcome, {username}</p>
+                <p className="text-gray-600 text-sm sm:text-base font-medium">Welcome, {user?.name || firebaseUser?.displayName || firebaseUser?.email || 'User'}</p>
               </div>
               {/* Google-style Profile Button - Beside Restaurant Name */}
               <button
@@ -155,17 +170,17 @@ const Dashboard = ({ username, onLogout }) => {
                     ? 'bg-gray-800 ring-2 ring-gray-400'
                     : 'bg-gray-700 hover:bg-gray-800'
                 }`}
-                title={user?.name || username}
+                title={user?.name || firebaseUser?.displayName || firebaseUser?.email || 'User'}
               >
                 {user?.profileImage ? (
                   <img 
                     src={user.profileImage} 
-                    alt={user?.name || username}
+                    alt={user?.name || firebaseUser?.displayName || firebaseUser?.email || 'User'}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <span className="text-white font-bold text-lg sm:text-xl flex items-center justify-center w-full h-full">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : username?.charAt(0).toUpperCase() || 'U'}
+                    {user?.name ? user.name.charAt(0).toUpperCase() : (firebaseUser?.displayName || firebaseUser?.email || 'U').charAt(0).toUpperCase()}
                   </span>
                 )}
               </button>
@@ -217,9 +232,9 @@ const Dashboard = ({ username, onLogout }) => {
                 Orders
               </button>
               <button
-                onClick={() => {
-                  onLogout()
-                  navigate('/login', { replace: true })
+                onClick={async () => {
+                  await firebaseSignOut(auth)
+                  navigate('/', { replace: true })
                 }}
                 className="flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 font-medium text-sm sm:text-base"
               >

@@ -1,13 +1,38 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+// API Base URL - uses environment variable or defaults to localhost
+// Fix: Ensure we use http:// for localhost, not https://
+const getApiBaseUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL
+  if (!envUrl) {
+    return 'http://localhost:5000'
+  }
+  // Fix common mistake: https://localhost should be http://localhost
+  if (envUrl.includes('localhost') && envUrl.startsWith('https://')) {
+    return envUrl.replace('https://', 'http://')
+  }
+  return envUrl
+}
 
-// Helper function to get auth token
-const getAuthToken = () => {
-  return localStorage.getItem('token')
+// Helper function to get auth token from Firebase
+import { auth } from '../firebase'
+
+const API_BASE_URL = getApiBaseUrl()
+
+const getAuthToken = async () => {
+  try {
+    const user = auth.currentUser
+    if (user) {
+      return await user.getIdToken()
+    }
+    return null
+  } catch (error) {
+    console.error('Error getting auth token:', error)
+    return null
+  }
 }
 
 // Helper function to make API calls
 const apiCall = async (endpoint, options = {}) => {
-  const token = getAuthToken()
+  const token = await getAuthToken()
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers
@@ -17,78 +42,145 @@ const apiCall = async (endpoint, options = {}) => {
     headers.Authorization = `Bearer ${token}`
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    headers
-  })
-
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(data.message || 'API request failed')
+  // Don't set Content-Type for FormData
+  if (options.body instanceof FormData) {
+    delete headers['Content-Type']
   }
 
-  return data
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      headers
+    })
+
+    // Check if response is JSON
+    const contentType = response.headers.get('content-type')
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text()
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status} ${response.statusText}. ${text}`)
+      }
+      return text
+    }
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      // Include more details in error message
+      const errorMessage = data.message || data.error || 'API request failed'
+      const errorDetails = data.details || data.errors || null
+      const fullError = new Error(errorMessage)
+      fullError.status = response.status
+      fullError.details = errorDetails
+      fullError.response = data
+      throw fullError
+    }
+
+    return data
+  } catch (error) {
+    console.error('API call error:', error)
+    // If it's already our custom error, re-throw it
+    if (error.status) {
+      throw error
+    }
+    // Otherwise, wrap it
+    const wrappedError = new Error(error.message || 'Network error or server unavailable')
+    wrappedError.originalError = error
+    throw wrappedError
+  }
 }
 
 // Auth API
 export const authAPI = {
-  register: (userData) => apiCall('/auth/register', {
+  getMe: () => apiCall('/api/auth/me'),
+  makeAdmin: (email) => apiCall('/api/auth/make-admin', {
     method: 'POST',
-    body: JSON.stringify(userData)
-  }),
-  login: (email, password) => apiCall('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ email, password })
+    body: JSON.stringify({ email })
   })
 }
 
 // Menu API
 export const menuAPI = {
-  getAll: () => apiCall('/menu'),
-  create: (item) => apiCall('/menu', {
+  getAll: () => apiCall('/api/menu'),
+  getById: (id) => apiCall(`/api/menu/${id}`),
+  create: (itemData) => apiCall('/api/menu', {
     method: 'POST',
-    body: JSON.stringify(item)
+    body: JSON.stringify(itemData)
   }),
-  update: (id, item) => apiCall(`/menu/${id}`, {
-    method: 'PATCH',
-    body: JSON.stringify(item)
+  update: (id, itemData) => apiCall(`/api/menu/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(itemData)
   }),
-  delete: (id) => apiCall(`/menu/${id}`, {
+  delete: (id) => apiCall(`/api/menu/${id}`, {
     method: 'DELETE'
   })
 }
 
 // Orders API
 export const ordersAPI = {
-  create: (orderData) => apiCall('/orders', {
+  create: (orderData) => apiCall('/api/orders', {
     method: 'POST',
     body: JSON.stringify(orderData)
   }),
-  getMyOrders: () => apiCall('/orders/my-orders'),
-  getAllOrders: () => apiCall('/orders'), // Admin only - gets all orders
-  getOrder: (orderId) => apiCall(`/orders/${orderId}`),
-  updateStatus: (orderId, status) => apiCall(`/orders/${orderId}/status`, {
+  getMyOrders: () => apiCall('/api/orders/my-orders'),
+  getAllOrders: () => apiCall('/api/orders/all'),
+  getById: (id) => apiCall(`/api/orders/${id}`),
+  updateStatus: (id, status) => apiCall(`/api/orders/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ status })
   }),
-  delete: (orderId) => apiCall(`/orders/${orderId}`, {
+  delete: (id) => apiCall(`/api/orders/${id}`, {
     method: 'DELETE'
   })
 }
 
-// Payments API
-export const paymentsAPI = {
-  createIntent: (orderId) => apiCall('/payments/create-intent', {
-    method: 'POST',
-    body: JSON.stringify({ orderId })
-  }),
-  confirm: (orderId, paymentIntentId) => apiCall('/payments/confirm', {
-    method: 'POST',
-    body: JSON.stringify({ orderId, paymentIntentId })
-  }),
-  getStatus: (orderId) => apiCall(`/payments/status/${orderId}`)
+// Upload API (for Cloudinary image uploads)
+export const uploadAPI = {
+  uploadImage: async (file) => {
+    const formData = new FormData()
+    formData.append('image', file)
+    
+    const token = await getAuthToken()
+    const headers = {}
+    if (token) {
+      headers.Authorization = `Bearer ${token}`
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/upload/image`, {
+      method: 'POST',
+      headers,
+      body: formData
+    })
+
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        const data = await response.json()
+        throw new Error(data.message || 'Failed to upload image')
+      } else {
+        const text = await response.text()
+        throw new Error(`Server error: ${response.status} ${response.statusText}. ${text}`)
+      }
+    }
+
+    return await response.json()
+  },
+  deleteImage: (publicId) => apiCall('/api/upload/image', {
+    method: 'DELETE',
+    body: JSON.stringify({ publicId })
+  })
 }
 
-export default apiCall
+// Admin API
+export const adminAPI = {
+  getStats: () => apiCall('/api/admin/stats'),
+  getUsers: () => apiCall('/api/admin/users'),
+  updateUser: (id, userData) => apiCall(`/api/admin/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(userData)
+  }),
+  deleteUser: (id) => apiCall(`/api/admin/users/${id}`, {
+    method: 'DELETE'
+  })
+}
 

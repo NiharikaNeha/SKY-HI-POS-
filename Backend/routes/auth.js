@@ -1,6 +1,6 @@
 import express from "express";
-import jwt from "jsonwebtoken";
-import { body, validationResult } from "express-validator";
+import admin from "firebase-admin";
+import { authenticate } from "../middleware/auth.js";
 import User from "../models/User.js";
 
 const router = express.Router();
@@ -21,151 +21,59 @@ const isAdminEmail = (email) => {
   );
 };
 
-// Register
-router.post(
-  "/register",
-  [
-    body("name").trim().notEmpty().withMessage("Name is required"),
-    body("email").isEmail().withMessage("Valid email is required"),
-    body("password")
-      .isLength({ min: 4 })
-      .withMessage("Password must be at least 4 characters"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { name, email, password, phone } = req.body;
-
-      // Check if user exists
-      const existingUser = await User.findOne({ email: email.toLowerCase() });
-      if (existingUser) {
-        return res.status(400).json({ message: "User already exists" });
-      }
-
-      // Determine role based on email
-      const role = isAdminEmail(email) ? "admin" : "user";
-      console.log(`Registering user ${email} with role: ${role}`);
-
-      // Create user
-      const user = new User({
-        name,
-        email: email.toLowerCase(),
-        password,
-        phone,
-        role,
-      });
-
-      await user.save();
-
-      // Generate token
-      if (!process.env.JWT_SECRET) {
-        return res.status(500).json({ message: 'JWT secret not configured' })
-      }
-      const token = jwt.sign(
-        { userId: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-
-      res.status(201).json({
-        message: "User registered successfully",
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-      });
-    } catch (error) {
-      console.error("Register error:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
-    }
+// Get current user info (protected route)
+router.get("/me", authenticate, async (req, res) => {
+  try {
+    res.json({
+      user: {
+        id: req.user._id,
+        firebaseUid: req.user.firebaseUid,
+        name: req.user.name,
+        email: req.user.email,
+        role: req.user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Get user error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-);
+});
 
-// Login
-router.post(
-  "/login",
-  [
-    body("email").isEmail().withMessage("Valid email is required"),
-    body("password").notEmpty().withMessage("Password is required"),
-  ],
-  async (req, res) => {
-    try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-      }
-
-      const { email, password } = req.body;
-
-      // Find user
-      const user = await User.findOne({ email: email.toLowerCase() });
-      if (!user) {
-        console.log(`Login attempt failed: User not found for email ${email}`);
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-
-      // Check password
-      try {
-        const isMatch = await user.comparePassword(password);
-        if (!isMatch) {
-          console.log(
-            `Login attempt failed: Incorrect password for email ${email}`
-          );
-          return res.status(401).json({ message: "Invalid email or password" });
-        }
-      } catch (passwordError) {
-        console.error("Password comparison error:", passwordError);
-        console.error("Error details:", {
-          email,
-          userId: user._id,
-          errorMessage: passwordError.message,
-        });
-        return res.status(401).json({ message: "Invalid email or password" });
-      }
-
-      // Update role if email is in admin list (in case user was registered before being added to admin list)
-      if (isAdminEmail(email)) {
-        if (user.role !== "admin") {
-          console.log(`Upgrading user ${email} to admin`);
-          user.role = "admin";
-          await user.save();
-        }
-      }
-
-      console.log(`User ${email} logged in with role: ${user.role}`);
-
-      // Generate token
-      if (!process.env.JWT_SECRET) {
-        return res.status(500).json({ message: 'JWT secret not configured' })
-      }
-      const token = jwt.sign(
-        { userId: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: "7d" }
-      );
-
-      res.json({
-        message: "Login successful",
-        token,
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        },
-      });
-    } catch (error) {
-      console.error("Login error:", error);
-      res.status(500).json({ message: "Server error", error: error.message });
+// Update user role (Admin only - for making users admin)
+router.post("/make-admin", authenticate, async (req, res) => {
+  try {
+    // Check if current user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: "Admin access required" });
     }
+
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.role = 'admin';
+    await user.save();
+
+    res.json({
+      message: "User upgraded to admin successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error("Make admin error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
-);
+});
 
 export default router;

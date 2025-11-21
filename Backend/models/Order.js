@@ -29,7 +29,20 @@ const orderSchema = new mongoose.Schema({
   },
   tableNumber: {
     type: Number,
-    required: true
+    required: function() {
+      return this.orderType === 'dining'
+    }
+  },
+  tables: [{
+    type: Number
+  }],
+  memberCount: {
+    type: Number
+  },
+  orderType: {
+    type: String,
+    enum: ['dining', 'parcel'],
+    default: 'dining'
   },
   items: [orderItemSchema],
   subtotal: {

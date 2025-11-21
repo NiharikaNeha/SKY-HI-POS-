@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
-  useNavigate,
 } from "react-router-dom";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from "./firebase";
 import { RestaurantProvider } from "./context/RestaurantContext";
 import Login from "./components/common/Login";
 import Dashboard from "./components/user/Dashboard";
@@ -16,86 +17,22 @@ import Navbar from "./components/user/Navbar";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
-  const token = localStorage.getItem("token");
-  const savedUser = localStorage.getItem("user");
+  const [user, loading] = useAuthState(auth);
 
-  if (!token || !savedUser) {
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  try {
-    const userData = JSON.parse(savedUser);
-    if (requireAdmin && userData.role !== "admin") {
-      return <Navigate to="/dashboard" replace />;
-    }
-    return children;
-  } catch (error) {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    return <Navigate to="/login" replace />;
-  }
-};
-
-// Login wrapper component
-const LoginWrapper = ({ onLogin }) => {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-
-  useEffect(() => {
-    if (token) {
-      const savedUser = localStorage.getItem("user");
-      if (savedUser) {
-        try {
-          const userData = JSON.parse(savedUser);
-          if (userData.role === "admin") {
-            navigate("/admin", { replace: true });
-          } else {
-            navigate("/dashboard", { replace: true });
-          }
-        } catch (error) {
-          // Invalid user data, stay on login
-        }
-      }
-    }
-  }, [token, navigate]);
-
-  const handleLogin = (userData, admin = false) => {
-    onLogin(userData, admin);
-    if (userData.role === "admin" || admin) {
-      navigate("/admin", { replace: true });
-    } else {
-      navigate("/dashboard", { replace: true });
-    }
-  };
-
-  return <Login onLogin={handleLogin} />;
+  // Check admin role from backend
+  // For now, we'll check it in the component itself
+  return children;
 };
 
 const App = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    // Get user data from localStorage
-    const savedUser = localStorage.getItem("user");
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-      }
-    }
-  }, []);
-
-  const handleLogin = (userData) => {
-    setUser(userData);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setUser(null);
-  };
-
   return (
     <RestaurantProvider>
       <Router>
@@ -103,18 +40,12 @@ const App = () => {
           <Navbar />
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route
-              path="/login"
-              element={<LoginWrapper onLogin={handleLogin} />}
-            />
+            <Route path="/login" element={<Login />} />
             <Route
               path="/dashboard/*"
               element={
                 <ProtectedRoute>
-                  <Dashboard
-                    username={user?.name || user?.email}
-                    onLogout={handleLogout}
-                  />
+                  <Dashboard />
                 </ProtectedRoute>
               }
             />
@@ -122,10 +53,7 @@ const App = () => {
               path="/admin/*"
               element={
                 <ProtectedRoute requireAdmin={true}>
-                  <AdminDashboard
-                    username={user?.name || user?.email}
-                    onLogout={handleLogout}
-                  />
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />
