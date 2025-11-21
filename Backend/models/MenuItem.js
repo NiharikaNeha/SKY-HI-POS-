@@ -8,8 +8,13 @@ const menuItemSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    required: true,
-    enum: ['Appetizers', 'Main Course', 'Desserts', 'Beverages', 'Salads']
+    required: true
+  },
+  vegType: {
+    type: String,
+    enum: ['veg', 'non-veg'],
+    default: 'veg',
+    required: true
   },
   price: {
     type: Number,

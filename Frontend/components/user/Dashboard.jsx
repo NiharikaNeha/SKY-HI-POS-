@@ -25,7 +25,10 @@ const Dashboard = () => {
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [currentOrder, setCurrentOrder] = useState(null)
   const [user, setUser] = useState(null)
-  const [orderType, setOrderType] = useState('dining') // 'dining' or 'parcel'
+  // Get orderType from localStorage (set by Navbar)
+  const [orderType, setOrderType] = useState(() => {
+    return localStorage.getItem('orderType') || 'dining'
+  })
 
   useEffect(() => {
     // Get user data from backend
@@ -49,6 +52,21 @@ const Dashboard = () => {
     }
     fetchUser()
   }, [firebaseUser, firebaseLoading])
+
+  // Listen for orderType changes from Navbar
+  useEffect(() => {
+    const handleOrderTypeChange = (e) => {
+      setOrderType(e.detail)
+      // Reset table selection and member count when switching to parcel
+      if (e.detail === 'parcel') {
+        setSelectedTable(null)
+        setMemberCount(null)
+        setMemberCountInput('')
+      }
+    }
+    window.addEventListener('orderTypeChanged', handleOrderTypeChange)
+    return () => window.removeEventListener('orderTypeChanged', handleOrderTypeChange)
+  }, [])
 
   const handleUserUpdate = (updatedUser) => {
     setUser(updatedUser)
@@ -125,8 +143,11 @@ const Dashboard = () => {
     }
   }
 
+  // This function is kept for backward compatibility but orderType is now managed by Navbar
   const handleOrderTypeChange = (type) => {
     setOrderType(type)
+    localStorage.setItem('orderType', type)
+    window.dispatchEvent(new CustomEvent('orderTypeChanged', { detail: type }))
     // Reset table selection and member count when switching to parcel
     if (type === 'parcel') {
       setSelectedTable(null)
@@ -148,102 +169,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 scroll-smooth">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10 border-b border-gray-200 backdrop-blur-sm bg-white/95">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-5">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
-            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 w-full sm:w-auto">
-              <div className="w-10 h-10 sm:w-14 sm:h-14 bg-gray-800 rounded-lg flex items-center justify-center text-white text-lg sm:text-2xl font-bold">
-                🍽️
-              </div>
-              <div className="flex-1 sm:flex-none">
-                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">
-                  SKY-HI Restaurant
-                </h1>
-                <p className="text-gray-600 text-sm sm:text-base font-medium">Welcome, {user?.name || firebaseUser?.displayName || firebaseUser?.email || 'User'}</p>
-              </div>
-              {/* Google-style Profile Button - Beside Restaurant Name */}
-              <button
-                onClick={() => navigate('/dashboard/profile')}
-                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full transition-all duration-200 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 overflow-hidden ml-auto sm:ml-0 ${
-                  location.pathname === '/dashboard/profile'
-                    ? 'bg-gray-800 ring-2 ring-gray-400'
-                    : 'bg-gray-700 hover:bg-gray-800'
-                }`}
-                title={user?.name || firebaseUser?.displayName || firebaseUser?.email || 'User'}
-              >
-                {user?.profileImage ? (
-                  <img 
-                    src={user.profileImage} 
-                    alt={user?.name || firebaseUser?.displayName || firebaseUser?.email || 'User'}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <span className="text-white font-bold text-lg sm:text-xl flex items-center justify-center w-full h-full">
-                    {user?.name ? user.name.charAt(0).toUpperCase() : (firebaseUser?.displayName || firebaseUser?.email || 'U').charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </button>
-            </div>
-            <div className="flex items-center flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
-              {/* Order Type Toggle */}
-              <div className="flex items-center gap-1.5 bg-gray-100 rounded-full p-1.5">
-                <button
-                  onClick={() => handleOrderTypeChange('dining')}
-                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-semibold text-sm sm:text-base transition-all duration-200 ${
-                    orderType === 'dining'
-                      ? 'bg-gray-800 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  title="Dining In"
-                >
-                  🍽️ <span className="hidden sm:inline ml-1">Dining</span>
-                </button>
-                <button
-                  onClick={() => handleOrderTypeChange('parcel')}
-                  className={`px-4 sm:px-5 py-2 sm:py-2.5 rounded-full font-semibold text-sm sm:text-base transition-all duration-200 ${
-                    orderType === 'parcel'
-                      ? 'bg-gray-800 text-white shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                  title="Takeaway"
-                >
-                  📦 <span className="hidden sm:inline ml-1">Parcel</span>
-                </button>
-              </div>
-              <button
-                onClick={() => navigate('/dashboard')}
-                className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base ${
-                  location.pathname === '/dashboard' || location.pathname === '/dashboard/'
-                    ? 'bg-gray-800 text-white'
-                    : 'bg-gray-700 text-white hover:bg-gray-800'
-                }`}
-              >
-                Menu
-              </button>
-              <button
-                onClick={() => navigate('/dashboard/orders')}
-                className={`flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg transition-all duration-200 font-medium text-sm sm:text-base ${
-                  location.pathname === '/dashboard/orders'
-                    ? 'bg-gray-800 text-white'
-                    : 'bg-gray-700 text-white hover:bg-gray-800'
-                }`}
-              >
-                Orders
-              </button>
-              <button
-                onClick={async () => {
-                  await firebaseSignOut(auth)
-                  navigate('/', { replace: true })
-                }}
-                className="flex-1 sm:flex-none px-3 sm:px-5 py-2 sm:py-2.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 font-medium text-sm sm:text-base"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Header removed - now handled by Navbar component */}
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-4 sm:py-6 lg:py-8 scroll-smooth">

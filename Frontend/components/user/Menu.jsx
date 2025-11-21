@@ -1,15 +1,45 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 
 const Menu = ({ menuItems, searchTerm, onAddToCart }) => {
-  const categories = ['All', 'Appetizers', 'Main Course', 'Desserts', 'Beverages', 'Salads']
+  const [foodFilter, setFoodFilter] = useState(() => {
+    return localStorage.getItem('foodFilter') || 'All';
+  });
+  const [activeCategory, setActiveCategory] = useState('All')
+  
+  // Listen for foodFilter changes from Navbar
+  useEffect(() => {
+    const handleFoodFilterChange = (e) => {
+      setFoodFilter(e.detail);
+    };
+    window.addEventListener('foodFilterChanged', handleFoodFilterChange);
+    return () => window.removeEventListener('foodFilterChanged', handleFoodFilterChange);
+  }, []);
+  
+  // Get unique categories from menu items
+  const categories = ['All', ...new Set(menuItems.map(item => item.category).filter(Boolean))]
 
   const filteredItems = menuItems.filter((item) => {
+    // Search filter
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.category.toLowerCase().includes(searchTerm.toLowerCase())
-    return matchesSearch
+    
+    if (!matchesSearch) return false
+    
+    // Category filter
+    if (activeCategory !== 'All' && item.category !== activeCategory) {
+      return false
+    }
+    
+    // Veg/Non-Veg filter
+    if (foodFilter === 'Veg' && item.vegType !== 'veg') {
+      return false
+    }
+    if (foodFilter === 'Non-Veg' && item.vegType !== 'non-veg') {
+      return false
+    }
+    
+    return true
   })
-
-  const activeCategory = 'All'
 
   return (
     <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-200 scroll-smooth mt-10">
@@ -25,6 +55,7 @@ const Menu = ({ menuItems, searchTerm, onAddToCart }) => {
         {categories.map((category) => (
           <button
             key={category}
+            onClick={() => setActiveCategory(category)}
             className={`px-3 sm:px-4 lg:px-5 py-1.5 sm:py-2 lg:py-2.5 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 whitespace-nowrap ${
               activeCategory === category
                 ? 'bg-gray-800 text-white'
@@ -65,7 +96,16 @@ const Menu = ({ menuItems, searchTerm, onAddToCart }) => {
 
               {/* Content Section */}
               <div className="mb-3">
-                <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-0.5">{item.name}</h3>
+                <div className="flex items-center justify-between mb-0.5">
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900">{item.name}</h3>
+                  <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ml-2 ${
+                    item.vegType === 'veg' 
+                      ? 'bg-green-100 text-green-700 border border-green-300' 
+                      : 'bg-red-100 text-red-700 border border-red-300'
+                  }`}>
+                    {item.vegType === 'veg' ? '🟢 Veg' : '🔴 Non-Veg'}
+                  </span>
+                </div>
                 <p className="text-xs font-medium text-gray-500 mb-1.5 uppercase tracking-wider">{item.category}</p>
                 <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">{item.description}</p>
               </div>

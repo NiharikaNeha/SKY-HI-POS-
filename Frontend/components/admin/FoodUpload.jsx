@@ -13,7 +13,8 @@ const FoodUpload = () => {
     category: '',
     price: '',
     description: '',
-    image: ''
+    image: '',
+    vegType: 'veg' // 'veg', 'non-veg', or 'both'
   })
 
   const processImageFile = (file) => {
@@ -100,7 +101,8 @@ const FoodUpload = () => {
         category: '',
         price: '',
         description: '',
-        image: ''
+        image: '',
+        vegType: 'veg'
       })
     } catch (error) {
       console.error('Error saving menu item:', error)
@@ -116,7 +118,8 @@ const FoodUpload = () => {
       category: item.category,
       price: item.price.toString(),
       description: item.description,
-      image: item.image || ''
+      image: item.image || '',
+      vegType: item.vegType || 'veg'
     })
   }
 
@@ -141,7 +144,8 @@ const FoodUpload = () => {
       category: '',
       price: '',
       description: '',
-      image: ''
+      image: '',
+      vegType: 'veg'
     })
   }
 
@@ -176,6 +180,19 @@ const FoodUpload = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none"
                 required
               />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Veg/Non-Veg</label>
+              <select
+                value={formData.vegType}
+                onChange={(e) => setFormData({ ...formData, vegType: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-500 focus:border-transparent outline-none"
+                required
+              >
+                <option value="veg">🟢 Vegetarian</option>
+                <option value="non-veg">🔴 Non-Vegetarian</option>
+              </select>
             </div>
             
             <div>
@@ -307,7 +324,16 @@ const FoodUpload = () => {
                   </div>
                 )}
               </div>
-              <h3 className="font-bold text-gray-800 mb-1">{item.name}</h3>
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-bold text-gray-800">{item.name}</h3>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  item.vegType === 'veg' 
+                    ? 'bg-green-100 text-green-700 border border-green-300' 
+                    : 'bg-red-100 text-red-700 border border-red-300'
+                }`}>
+                  {item.vegType === 'veg' ? '🟢 Veg' : '🔴 Non-Veg'}
+                </span>
+              </div>
               <p className="text-sm text-gray-500 mb-2">{item.category}</p>
               <p className="text-sm text-gray-600 mb-3 line-clamp-2">{item.description}</p>
               <div className="flex items-center justify-between mb-3">
