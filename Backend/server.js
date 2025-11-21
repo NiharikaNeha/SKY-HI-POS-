@@ -19,8 +19,6 @@ const corsOptions = {
     // List of allowed origins
     const allowedOrigins = [
       'http://localhost:5173',
-      'http://localhost:3000',
-      'http://127.0.0.1:5173',
       'https://sky-hi-pos.vercel.app'
     ]
     

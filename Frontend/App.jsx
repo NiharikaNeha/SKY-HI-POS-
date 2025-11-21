@@ -10,6 +10,9 @@ import { RestaurantProvider } from "./context/RestaurantContext";
 import Login from "./components/common/Login";
 import Dashboard from "./components/user/Dashboard";
 import AdminDashboard from "./components/admin/AdminDashboard";
+import Home from "./components/HomePage/Home";
+import Footer from "./components/user/Footer";
+import Navbar from "./components/user/Navbar";
 
 // Protected Route Component
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
@@ -96,35 +99,39 @@ const App = () => {
   return (
     <RestaurantProvider>
       <Router>
-        <Routes>
-          <Route
-            path="/login"
-            element={<LoginWrapper onLogin={handleLogin} />}
-          />
-          <Route
-            path="/dashboard/*"
-            element={
-              <ProtectedRoute>
-                <Dashboard
-                  username={user?.name || user?.email}
-                  onLogout={handleLogout}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/admin/*"
-            element={
-              <ProtectedRoute requireAdmin={true}>
-                <AdminDashboard
-                  username={user?.name || user?.email}
-                  onLogout={handleLogout}
-                />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/login"
+              element={<LoginWrapper onLogin={handleLogin} />}
+            />
+            <Route
+              path="/dashboard/*"
+              element={
+                <ProtectedRoute>
+                  <Dashboard
+                    username={user?.name || user?.email}
+                    onLogout={handleLogout}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/*"
+              element={
+                <ProtectedRoute requireAdmin={true}>
+                  <AdminDashboard
+                    username={user?.name || user?.email}
+                    onLogout={handleLogout}
+                  />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          <Footer />
+        </div>
       </Router>
     </RestaurantProvider>
   );

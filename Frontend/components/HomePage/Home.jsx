@@ -1,0 +1,225 @@
+import React, { useEffect, useState } from "react";
+import { useRestaurant } from "../../context/RestaurantContext";
+import { menuAPI } from "../../utils/api";
+import VegCard from "./VegCard";
+import NonVegCard from "./NonVegCard";
+import OfferZone from "./OfferZone";
+import MenuSlider from "./MenuSlider";
+import FloatingCartButton from "./FloatingCartButton";
+import VideoSection from "./VideoSection";
+
+const Home = () => {
+  const [loading, setLoading] = useState(true);
+  const [foods, setFoods] = useState([]);
+  const [vegFoods, setVegFoods] = useState([]);
+  const [nonVegFoods, setNonVegFoods] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [cart, setCart] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  const { menuItems, loading: menuLoading, fetchMenuItems } = useRestaurant();
+
+  // Fetch foods
+  useEffect(() => {
+    const fetchFoods = async () => {
+      try {
+        // Use the restaurant context menu items
+        await fetchMenuItems();
+      } catch (err) {
+        console.error("Error fetching foods:", err);
+      }
+    };
+    fetchFoods();
+  }, [fetchMenuItems]);
+
+  // Process menu items when they're loaded
+  useEffect(() => {
+    if (!menuLoading && menuItems.length > 0) {
+      const allFoods = menuItems.filter(f => f.status !== 'unavailable');
+      setFoods(allFoods);
+
+      // Separate veg and non-veg (if type field exists, otherwise categorize by name/description)
+      const veg = allFoods.filter(f => {
+        if (f.type === "Veg") return true;
+        // Fallback: check if name/description contains veg keywords
+        const name = (f.name || '').toLowerCase();
+        return name.includes('veg') || name.includes('vegetable') || name.includes('salad');
+      });
+      const nonVeg = allFoods.filter(f => {
+        if (f.type === "Non-Veg") return true;
+        // Fallback: check if name/description contains non-veg keywords
+        const name = (f.name || '').toLowerCase();
+        return name.includes('chicken') || name.includes('meat') || name.includes('fish') || name.includes('prawn');
+      });
+      setVegFoods(veg);
+      setNonVegFoods(nonVeg);
+
+      // Get categories with counts and images
+      const categoryMap = {};
+      allFoods.forEach(f => {
+        if (!categoryMap[f.category]) {
+          categoryMap[f.category] = {
+            count: 0,
+            image: f.image || '', // Use first food's image as category image
+            foods: []
+          };
+        }
+        categoryMap[f.category].count += 1;
+        categoryMap[f.category].foods.push(f);
+      });
+      setCategories(Object.entries(categoryMap).map(([name, data]) => ({ 
+        name, 
+        count: data.count,
+        image: data.image,
+        foods: data.foods
+      })));
+
+      setLoading(false);
+    } else if (!menuLoading) {
+      setLoading(false);
+    }
+  }, [menuItems, menuLoading]);
+
+  // Cart logic
+  useEffect(() => {
+    const savedCart = localStorage.getItem("cartItems");
+    if (savedCart) setCart(JSON.parse(savedCart));
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cart));
+  }, [cart]);
+
+  const addToCart = (food) => {
+    const existing = cart.find((item) => item._id === food._id);
+    if (existing) {
+      setCart(
+        cart.map((item) =>
+          item._id === food._id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
+    } else {
+      setCart([...cart, { ...food, quantity: 1 }]);
+    }
+  };
+
+  // Handle category click (for MenuSlider only, doesn't affect food cards)
+  const handleCategoryClick = (categoryName) => {
+    if (selectedCategory === categoryName) {
+      // If same category clicked, reset filter
+      setSelectedCategory(null);
+    } else {
+      setSelectedCategory(categoryName);
+    }
+  };
+
+
+  if (loading || menuLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-gray-800 mb-4"></div>
+          <p className="text-gray-600 text-lg font-medium">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden min-h-screen">
+      {/* Pure white background */}
+      <div className="fixed inset-0 bg-white -z-10"></div>
+      
+      <div className="min-h-screen text-gray-900 pb-30 pt-12 relative">
+        <div className="container mx-auto px-3 sm:px-4 md:px-5 lg:px-8 py-5 sm:py-7 lg:py-8 max-w-[1920px]">
+          {/* Desktop: 2 main columns - Left (Offer Zone, Food cards, Special Offers), Right (Menu slider) */}
+          {/* Mobile: Expand menu slider when category is selected */}
+          <div className={`grid gap-3 sm:gap-4 md:gap-5 lg:gap-7 transition-all duration-300 ease-in-out
+            ${selectedCategory 
+              ? 'grid-cols-[1fr_1.3fr] sm:grid-cols-[1fr_1.4fr] md:grid-cols-[1.8fr_1fr] lg:grid-cols-[2fr_1fr]'
+              : 'grid-cols-[1.5fr_1fr] sm:grid-cols-[1.6fr_1fr] md:grid-cols-[1.8fr_1fr] lg:grid-cols-[2fr_1fr]'
+            }`}>
+            {/* Left Column - Desktop: Food cards at top, Special Offers below */}
+            <div className="col-span-1 md:col-span-1 flex flex-col md:space-y-3 lg:space-y-4 gap-3 md:gap-0">
+              {/* Desktop: Food cards side by side at top */}
+              <div className="hidden md:grid md:grid-cols-2 gap-3 lg:gap-4 md:shrink-0">
+                <VegCard
+                  vegFoods={vegFoods}
+                  onAddToCart={addToCart}
+                  heightClass="h-[calc(119vh-380px)]"
+                />
+                <NonVegCard
+                  nonVegFoods={nonVegFoods}
+                  onAddToCart={addToCart}
+                  heightClass="h-[calc(119vh-380px)]"
+                />
+              </div>
+
+              {/* Mobile: Food type 1 - Top Left */}
+              <div className="md:hidden">
+                <VegCard
+                  vegFoods={vegFoods}
+                  onAddToCart={addToCart}
+                  heightClass="h-[calc((100vh-280px)/2)]"
+                />
+              </div>
+
+              {/* Mobile: Food type 2 - Bottom Left */}
+              <div className="md:hidden">
+                <NonVegCard
+                  nonVegFoods={nonVegFoods}
+                  onAddToCart={addToCart}
+                  heightClass="h-[calc((100vh-280px)/2)]"
+                />
+              </div>
+
+              {/* Special Offers - Desktop: Fixed just below food cards */}
+              <div className="hidden md:block md:shrink-0">
+                <OfferZone isMobile={false} />
+              </div>
+
+              {/* Mobile: Offer Zone - Top Right */}
+              <div className="md:hidden">
+                <OfferZone isMobile={true} />
+              </div>
+            </div>
+
+            {/* Right Column - Menu slider aligned with food cards top and special offers bottom */}
+            <div className="col-span-1 md:col-span-1 flex flex-col gap-2 sm:gap-3 md:gap-0 md:justify-start">
+              {/* Menu slider - Mobile: Bottom aligned with offer zone, Desktop: Top aligns with food cards */}
+              <div className="md:hidden flex flex-col justify-end">
+                <div className="h-[600px] sm:h-[320px]">
+                  <MenuSlider 
+                    categories={categories} 
+                    selectedCategory={selectedCategory}
+                    onCategoryClick={handleCategoryClick}
+                    foods={foods}
+                    onAddToCart={addToCart}
+                  />
+                </div>
+              </div>
+              {/* Desktop: Top aligns with food cards, bottom aligns with special offers */}
+              <div className="hidden md:flex md:flex-col md:h-[calc(135vh-320px)]">
+                <MenuSlider 
+                  categories={categories} 
+                  selectedCategory={selectedCategory}
+                  onCategoryClick={handleCategoryClick}
+                  foods={foods}
+                  onAddToCart={addToCart}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <VideoSection />
+
+        {/* Floating Cart Button */}
+        <FloatingCartButton cartCount={cart.length} />
+      </div>
+    </div>
+  );
+};
+
+export default Home;

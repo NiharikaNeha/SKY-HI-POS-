@@ -71,7 +71,7 @@ const TableSelector = ({ selectedTable, onTableSelect, memberCount, disabled = f
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 tracking-tight">Select Your Table</h2>
-          <p className="text-xs sm:text-sm text-gray-600 mt-1">Enter number of members and choose your table(s)</p>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">Enter number of memberss</p>
         </div>
       </div>
 
@@ -99,7 +99,7 @@ const TableSelector = ({ selectedTable, onTableSelect, memberCount, disabled = f
             </div>
           </div>
 
-          {/* Table Grid - Movie Theater Style */}
+          {/* Table Grid */}
           <div className="bg-gray-50 rounded-xl p-3 sm:p-4 lg:p-6 xl:p-8 mb-4 sm:mb-6 overflow-x-auto">
             <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-8 xl:grid-cols-10 gap-2 sm:gap-3 lg:gap-4 min-w-max sm:min-w-0 max-w-full sm:max-w-4xl mx-auto">
               {tables.map((table) => {
