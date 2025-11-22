@@ -22,14 +22,37 @@ export const RestaurantProvider = ({ children }) => {
   const fetchMenuItems = async () => {
     try {
       const response = await menuAPI.getAll()
-      setMenuItems(response.menuItems)
+      // Handle different response formats
+      let items = []
+      if (Array.isArray(response)) {
+        items = response
+      } else if (response.menuItems && Array.isArray(response.menuItems)) {
+        items = response.menuItems
+      } else if (response.foods && Array.isArray(response.foods)) {
+        items = response.foods
+      } else if (response.food && Array.isArray(response.food)) {
+        items = response.food
+      }
+      
+      // Map backend food format to frontend menu item format
+      const mappedItems = items.map(item => ({
+        _id: item._id || item.id,
+        name: item.name || '',
+        category: item.category || '',
+        price: item.price || 0,
+        description: item.description || '',
+        emoji: item.emoji || '🍽️',
+        image: item.image || '',
+        vegType: item.type === 'Non-Veg' ? 'non-veg' : item.type === 'Veg' ? 'veg' : item.vegType || 'veg',
+        status: item.available === false ? 'unavailable' : item.status || 'available',
+        cost: item.cost || 0
+      }))
+      
+      setMenuItems(mappedItems)
     } catch (error) {
       console.error('Error fetching menu items:', error)
-      // Fallback to default items if API fails
-      setMenuItems([
-        { _id: 1, name: 'Caesar Salad', category: 'Salads', price: 12.99, description: 'Fresh romaine lettuce with caesar dressing', emoji: '🥗', status: 'available', cost: 5.00 },
-        { _id: 2, name: 'Greek Salad', category: 'Salads', price: 11.99, description: 'Mixed greens with feta and olives', emoji: '🥙', status: 'available', cost: 4.50 },
-      ])
+      // Fallback to empty array if API fails
+      setMenuItems([])
     } finally {
       setLoading(false)
     }

@@ -120,8 +120,17 @@ const Dashboard = () => {
         orderType: orderType,
         items: cart.map(item => ({
           menuItemId: item._id || item.id,
+          name: item.name,
+          category: item.category,
+          vegType: item.vegType,
+          price: item.price,
+          image: item.image,
           quantity: item.quantity
-        }))
+        })),
+        user: user,
+        userEmail: user?.email || '',
+        userName: user?.displayName || user?.email?.split('@')[0] || 'User',
+        userId: user?.uid || ''
       }
 
       // Add table information only for dining orders

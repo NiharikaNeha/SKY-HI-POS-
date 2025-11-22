@@ -7,7 +7,13 @@ const FoodStatusManager = () => {
 
   const handleStatusChange = async (id, newStatus) => {
     try {
-      await menuAPI.update(id, { status: newStatus })
+      // Backend expects available: true/false, not status string
+      // Map frontend status to backend available field
+      const available = newStatus === 'available'
+      await menuAPI.update(id, { 
+        status: newStatus,
+        available: available
+      })
       // Refresh menu items from backend
       await fetchMenuItems()
     } catch (error) {
